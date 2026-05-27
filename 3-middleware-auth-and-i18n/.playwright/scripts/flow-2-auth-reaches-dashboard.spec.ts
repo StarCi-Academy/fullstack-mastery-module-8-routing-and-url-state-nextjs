@@ -10,7 +10,7 @@ test("flow 2 — valid session cookie reaches /en/dashboard", async ({ page, con
         {
             name: "session",
             value: "valid-token",
-            url: "http://localhost:3001",
+            url: "http://localhost:3280",
             httpOnly: false,
         },
     ])

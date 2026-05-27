@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { use } from "react"
+import { Modal, Button, useOverlayState } from "@heroui/react"
 
 /**
  * Intercepting route `(.)photos/[id]` — chặn navigation từ "/" qua "/photos/[id]"
@@ -22,25 +23,35 @@ export default function PhotoModalPage({
 }): JSX.Element {
     const { id } = use(params)
     const router = useRouter()
+    const state = useOverlayState({ defaultOpen: true })
+
+    const close = (): void => {
+        state.close()
+        // Bước: đẩy back để Next.js dispose @modal slot (EN: pop history to dispose slot)
+        router.back()
+    }
+
     return (
-        <div
-            data-testid="photo-modal"
-            style={{
-                position: "fixed",
-                inset: 0,
-                background: "rgba(0,0,0,0.6)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-            }}
-        >
-            <article style={{ background: "white", padding: 24, minWidth: 320 }}>
-                <h2 data-testid="modal-title">Photo {id} — modal</h2>
-                <p data-testid="modal-marker">Rendered via intercepting route.</p>
-                <button data-testid="modal-close" type="button" onClick={() => router.back()}>
-                    Close
-                </button>
-            </article>
-        </div>
+        <Modal state={state}>
+            <Modal.Backdrop>
+                <Modal.Container placement="center">
+                    <Modal.Dialog>
+                        <div data-testid="photo-modal" className="rounded-large bg-background p-6 shadow-large min-w-[320px]">
+                            <Modal.Header>
+                                <h2 data-testid="modal-title" className="text-xl font-semibold">Photo {id} — modal</h2>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <p data-testid="modal-marker" className="text-default-700">Rendered via intercepting route.</p>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button data-testid="modal-close" type="button" variant="primary" onPress={close}>
+                                    Close
+                                </Button>
+                            </Modal.Footer>
+                        </div>
+                    </Modal.Dialog>
+                </Modal.Container>
+            </Modal.Backdrop>
+        </Modal>
     )
 }

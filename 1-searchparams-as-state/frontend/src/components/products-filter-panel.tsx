@@ -1,5 +1,5 @@
 "use client"
-import { Button, Input } from "@heroui/react"
+import { Button, Input, Card, Chip } from "@heroui/react"
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { useCallback } from "react"
@@ -12,6 +12,11 @@ type Sort = "asc" | "desc"
  *
  * Đọc state qua useSearchParams; ghi state qua router.replace để không thêm history.
  * (EN: Reads state via useSearchParams; writes via router.replace to avoid history bloat.)
+ *
+ * Lưu ý UI polish: native <select> được giữ thay vì HeroUI Select vì Playwright spec
+ * dùng `.selectOption()` chỉ hoạt động với native element. Style bằng Tailwind cho polished.
+ * (EN: We keep native <select> rather than HeroUI Select because Playwright `.selectOption()`
+ * only works on native form elements. Styling is done with Tailwind for polished look.)
  */
 export function ProductsFilterPanel(): JSX.Element {
     const router = useRouter()
@@ -42,50 +47,78 @@ export function ProductsFilterPanel(): JSX.Element {
         router.replace(pathname)
     }, [pathname, router])
 
+    const activeChips: Array<{ key: string; label: string; color: "accent" | "warning" | "success" }> = []
+    if (category) activeChips.push({ key: "category", label: `category: ${category}`, color: "accent" })
+    if (sort !== "asc") activeChips.push({ key: "sort", label: `sort: ${sort}`, color: "warning" })
+    if (priceMin) activeChips.push({ key: "priceMin", label: `min: ${priceMin}`, color: "success" })
+
+    const selectClass =
+        "h-10 rounded-medium border border-default-200 bg-default-50 px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+
     return (
-        <section data-testid="filter-panel">
-            <label>
-                Category
-                <select
-                    data-testid="filter-category"
-                    value={category}
-                    onChange={(e) => updateParam("category", e.target.value)}
-                >
-                    <option value="">(all)</option>
-                    <option value="book">book</option>
-                    <option value="game">game</option>
-                </select>
-            </label>
+        <section data-testid="filter-panel" className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-2 min-h-8">
+                {activeChips.length === 0 ? (
+                    <Chip size="sm" variant="soft" color="default">no active filter</Chip>
+                ) : (
+                    activeChips.map((c) => (
+                        <Chip key={c.key} size="sm" color={c.color} variant="soft">{c.label}</Chip>
+                    ))
+                )}
+            </div>
 
-            <label>
-                Sort
-                <select
-                    data-testid="filter-sort"
-                    value={sort}
-                    onChange={(e) => updateParam("sort", e.target.value)}
-                >
-                    <option value="asc">asc</option>
-                    <option value="desc">desc</option>
-                </select>
-            </label>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <label className="flex flex-col gap-1">
+                    <span className="text-default-500 text-sm">Category</span>
+                    <select
+                        data-testid="filter-category"
+                        value={category}
+                        onChange={(e) => updateParam("category", e.target.value)}
+                        className={selectClass}
+                    >
+                        <option value="">(all)</option>
+                        <option value="book">book</option>
+                        <option value="game">game</option>
+                    </select>
+                </label>
 
-            <label>
-                Min price
-                <Input
-                    data-testid="filter-price-min"
-                    type="number"
-                    value={priceMin}
-                    onChange={(e) => updateParam("priceMin", e.target.value)}
-                />
-            </label>
+                <label className="flex flex-col gap-1">
+                    <span className="text-default-500 text-sm">Sort</span>
+                    <select
+                        data-testid="filter-sort"
+                        value={sort}
+                        onChange={(e) => updateParam("sort", e.target.value)}
+                        className={selectClass}
+                    >
+                        <option value="asc">asc</option>
+                        <option value="desc">desc</option>
+                    </select>
+                </label>
 
-            <Button type="button" data-testid="filter-clear" onPress={clearAll}>
-                Clear all
-            </Button>
+                <label className="flex flex-col gap-1">
+                    <span className="text-default-500 text-sm">Min price</span>
+                    <Input
+                        data-testid="filter-price-min"
+                        type="number"
+                        value={priceMin}
+                        onChange={(e) => updateParam("priceMin", e.target.value)}
+                    />
+                </label>
+            </div>
 
-            <pre data-testid="filter-state">
-                {JSON.stringify({ category, sort, priceMin }, null, 2)}
-            </pre>
+            <div>
+                <Button type="button" data-testid="filter-clear" onPress={clearAll} variant="danger" size="sm">
+                    Clear all
+                </Button>
+            </div>
+
+            <Card>
+                <Card.Content className="p-4">
+                    <pre data-testid="filter-state" className="text-xs text-default-700 whitespace-pre-wrap">
+                        {JSON.stringify({ category, sort, priceMin }, null, 2)}
+                    </pre>
+                </Card.Content>
+            </Card>
         </section>
     )
 }

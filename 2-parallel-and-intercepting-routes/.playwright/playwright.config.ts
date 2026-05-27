@@ -7,7 +7,7 @@ export default defineConfig({
     testDir: "./scripts",
     timeout: 30_000,
     use: {
-        baseURL: "http://localhost:3140",
+        baseURL: "http://localhost:3270",
         trace: "on-first-retry",
         screenshot: "only-on-failure",
         channel: "chrome",
@@ -15,7 +15,7 @@ export default defineConfig({
     webServer: {
         command: "npm install --prefer-offline && npm run dev",
         cwd: "../frontend",
-        port: 3140,
+        port: 3270,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
     },
